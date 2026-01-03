@@ -241,6 +241,17 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 
 ### Now from the option that you see , choose "401 Response" and change the "HTTP Auth Level" to "negotiate" - We basically tell the APM to response with 401 and with header negotiate , and browser need to understand it as "i need to provide the TGT"
 <image>
+#### Go to branch rule and make sure these 2 branch rules (Press add branch rules and advance):
+#### Press add branch rule , "change" and then "advance" and make sure you see the folloiwng string 
+```text
+expr {[string tolower [mcget {session.logon.last.authtype}]] == "basic"} 
+```
+####  "change" and then "advance" on the second rule make sure you see the folloiwng string 
+```text
+expr {[string tolower [mcget {session.logon.last.authtype}]] == "negotiate"}
+```
+ #### The rule define if this block is seccessful, the browser need to reply with either negotiate or basic authtype to be count as successful.
+<image>
 
 ### Press "save". now lets create the Kerberos block: Now press "+" on the negotiate branch
 <image>
@@ -264,4 +275,56 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 * Choose the server which we created earlier
 * Fill in the search DN with DC=kerb-jwt,DC=apm
 * And the search filter to :"(userPrincipalName=%{session.logon.last.username})" - this is tells the APM that the userPrincipalName is located on the session variable :session.logon.last.users
-* E
+* Enable also "Fetach groups..." and Save 
+<image>
+
+### Change the "Group Membership" brach to "Allow"
+<image>
+
+### Do the same for the fallback branch under the LDAP query
+<image>
+
+### UP on the right screen there is message "Apply Access Policy" - press on it for the policy to be saved and ready.
+
+### Now lets go back to "Local Traffic" module ---> Virtual server ---> Virtual server list
+<image>
+
+### Press on out virtual server and scroll down to Acess section , we will choose our policy and them on update.
+<image>
+
+### Preconfigured this lab i have added the site to the chrome and edge authenticaton :
+```text
+reg add "HKLM\Software\Policies\Microsoft\Edge" /v AuthServerAllowlist /t REG_SZ /d app2.kerb-jwt.apm /f
+reg add "HKLM\Software\Policies\Microsoft\Edge" /v AuthNegotiateDelegateAllowlist /t REG_SZ /d app2.kerb-jwt.apm /f
+reg add "HKLM\Software\Policies\Microsoft\Edge" /v EnableAuthNegotiatePort /t REG_SZ /d 443 /f
+reg add "HKLM\Software\Policies\Microsoft\Edge" /v DisableAuthNegotiateCnameLookup /t REG_DWORD /d 1 /f
+reg add "HKLM\Software\Policies\Google\Chrome" /v AuthServerAllowlist /t REG_SZ /d app2.kerb-jwt.apm /f
+reg add "HKLM\Software\Policies\Google\Chrome" /v AuthNegotiateDelegateAllowlist /t REG_SZ /d app2.kerb-jwt.apm /f
+reg add "HKLM\Software\Policies\Google\Chrome" /v EnableAuthNegotiatePort /t REG_SZ /d 443 /f
+reg add "HKLM\Software\Policies\Google\Chrome" /v DisableAuthNegotiateCnameLookup /t REG_DWORD /d 1 /f
+```
+
+### Now lets test the policy :
+* Under the Components section of the lab page, head to BIGIP practice and open the WEB Shell .
+* On the webshell tail the APM logs , for watching what is going on during our authentication phase.
+* Enter the command : ```bash tail -f /var/log/apm```
+<Image>
+* * Login to the client windows11 - User: f5_student Pass: F5apmtrain!
+* Open the Internet Option from the windows, and make sure our FQDN listed on the Local Inranet sites (Sites and then advance) list under security section.
+<Image>
+* Afthe verification, open the edge browser and before entering the FQDN open the Dev tools 
+* enter the FQDN : app2.kerb-jwt.apm 
+* If the authenticaton is failed - what may be wrong ? time synchronazation ?
+* Upon success watch the apm send 401 to the browser with WWW negotiate Header
+* Browser sending ""authorization": "Negotiate....." with the ticker as base64 code, if you got this -- that the end of this step (not so long ah ?)
+* Of course you can now view the application 
+<image>
+
+### Pro TIP : tail the logs that we showed earlier for understand or solve an issue, upon hard issue, we may activate debug logs (for another session :))
+
+
+
+
+
+
+
