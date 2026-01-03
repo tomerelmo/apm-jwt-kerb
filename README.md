@@ -194,10 +194,10 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ### Lets create PerSession Policy and test our objects to have kerberos authentication for entering the application.
 
 ### On the LAB page go to components and login with RDP to the "Client Desktop" station (User: f5_student | Passwrod: F5apmtrain! )
-<image>
+![Image]()
 
 ### Open the chrome browser and Navigate to "https://app2.kerb-jwt.apm"(You may press F12 to make sure that no 401 which force SPNEGO occurred yet - no policy created yet)
-<image>
+![Image]()
 
 ### Now go back to the BIGIP and Lets configure the Per Session Policy
 
@@ -205,24 +205,24 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ![Image](https://iili.io/fjAVbDB.png)
 
 ### From the menu choose : profile / policies ---> access profile ( per session pfrofile)
-<image>
+![Image]()
 
 ### Press on Create 
 
 ### Fill the name and choose "Profile Type" -"all"
-<image>
+![Image]()
 
 ### Scroll down and add the english to the "accepted language" 
-<image>
+![Image]()
 
 ### Create the policy - make sure the policy appear on the list
-<image >
+![Image]()
 
 ### Now on the Policy list , pay attention to the right side of the screen, there on your policy, you will see "Edit" button, press on it
-<image>
+![Image]()
 
 ### The edit button take us to the policy editor page 
-<image>
+![Image]()
 
 ### Between the block of "Start" and the block of "Deny" - there is line with word "Fallback" and "+" sign near to it - press on "+".
 
@@ -240,7 +240,7 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ### The explanation above is written in order for you to understand the flow which we are going to create .
 
 ### Now from the option that you see , choose "401 Response" and change the "HTTP Auth Level" to "negotiate" - We basically tell the APM to response with 401 and with header negotiate , and browser need to understand it as "i need to provide the TGT"
-<image>
+![Image]()
 #### Go to branch rule and make sure these 2 branch rules (Press add branch rules and advance):
 #### Press add branch rule , "change" and then "advance" and make sure you see the folloiwng string 
 ```text
@@ -251,46 +251,46 @@ expr {[string tolower [mcget {session.logon.last.authtype}]] == "basic"}
 expr {[string tolower [mcget {session.logon.last.authtype}]] == "negotiate"}
 ```
  #### The rule define if this block is seccessful, the browser need to reply with either negotiate or basic authtype to be count as successful.
-<image>
+![Image]()
 
 ### Press "save". now lets create the Kerberos block: Now press "+" on the negotiate branch
-<image>
+![Image]()
 
 ### Search on the box "Kerberos Auth" select it and press "add item"
-<image >
+![Image]()
 
 ### config the Kerberos box:
 * Choose the AAA server that we create 
 * Enable request based auth
 * Enable extract group SID 
 * Fill the group SID variable  with the following variable : session.kerberos.last.groupsids (This is session variable that APM will keep the information of the SID groups ) - We can use them later but , we will query the names of the groups directly from the AD later
-<image>
+![Image]()
 
 ### Now the policy looks like the below:
-<image>
+![Image]()
 
 ### Please press on the branch "Success" "+" sign and add Ldap query (Remember that we created it earlier ?)
-<image>
+![Image]()
 
 * Choose the server which we created earlier
 * Fill in the search DN with DC=kerb-jwt,DC=apm
 * And the search filter to :"(userPrincipalName=%{session.logon.last.username})" - this is tells the APM that the userPrincipalName is located on the session variable :session.logon.last.users
 * Enable also "Fetach groups..." and Save 
-<image>
+![Image]()
 
 ### Change the "Group Membership" brach to "Allow"
-<image>
+![Image]()
 
 ### Do the same for the fallback branch under the LDAP query
-<image>
+![Image]()
 
 ### UP on the right screen there is message "Apply Access Policy" - press on it for the policy to be saved and ready.
 
 ### Now lets go back to "Local Traffic" module ---> Virtual server ---> Virtual server list
-<image>
+![Image]()
 
 ### Press on out virtual server and scroll down to Acess section , we will choose our policy and them on update.
-<image>
+![Image]()
 
 ### Preconfigured this lab i have added the site to the chrome and edge authenticaton :
 ```text
@@ -308,23 +308,76 @@ reg add "HKLM\Software\Policies\Google\Chrome" /v DisableAuthNegotiateCnameLooku
 * Under the Components section of the lab page, head to BIGIP practice and open the WEB Shell .
 * On the webshell tail the APM logs , for watching what is going on during our authentication phase.
 * Enter the command : ```bash tail -f /var/log/apm```
-<Image>
+![Image]()
 * * Login to the client windows11 - User: f5_student Pass: F5apmtrain!
 * Open the Internet Option from the windows, and make sure our FQDN listed on the Local Inranet sites (Sites and then advance) list under security section.
-<Image>
+![Image]()
 * Afthe verification, open the edge browser and before entering the FQDN open the Dev tools 
 * enter the FQDN : app2.kerb-jwt.apm 
 * If the authenticaton is failed - what may be wrong ? time synchronazation ?
 * Upon success watch the apm send 401 to the browser with WWW negotiate Header
 * Browser sending ""authorization": "Negotiate....." with the ticker as base64 code, if you got this -- that the end of this step (not so long ah ?)
 * Of course you can now view the application 
-<image>
+![Image]()
 
 ### Pro TIP : tail the logs that we showed earlier for understand or solve an issue, upon hard issue, we may activate debug logs (for another session :))
 
+## Step 5:
+### Now lets create the building blocks for the JWT sending 
+### As you noticed we have added "LDAP Query" block to our policy, this was for getting the groups that belongs to the user and put them on the JWT claims
 
+### We will create the following blocks
+* JSON web toekn key configuration
+* Token configuration
+* Oauth cliams
+* Oauth Bearer - here we are adding the key configuration and the Oauth claims
+* Then we are adding the oauth bearer object to the "per session policy" we created to generate the JWT
 
+### First building block : JSON web toekn key configuration 
+### under Access go to "Federation" ---> "Json Web Token" ---> "Key configuration" - create
+* Fill the name 
+* Fill the ID - importnant
+* JWT type - JWS
+* Type RSA
+* signin Algorithim : RS256
+* certificate file, key and chain : choose default -- While the server you send will validate the jwt, he needs to have the certificate (not the p.key) on the server 
+![Image]()
 
+### under Access go to "Federation" ---> "Json Web Token" ---> "Token configuration" - create
+* name : choose name
+* issuer : https://bigip.kerb-jwt.apm 
+* Audience : add "app2"
+* Allowed singin algorithm: RS256
+* Allowed keys : the key we created above
+![Image]()
 
+### under Access go to "Federation" ---> "Oauth Authorization server" ---> "claims" - create
+* Name: object name choose one 
+* type : leave string
+* Claim name: groups 
+* Claim value : %{session.ldap.last.attr.memberOf} --- we are taking the groups from the APM session and putting it on the claims of the JWT
+* Repeat the proccess for UPN and 
+```text
+upn | %{session.ldap.last.attr.userPrincipalName}
+user_id | %{session.logon.last.username}
+```
+![Image]()
+
+### under Access go to "single sign on" ---> OAuth Bearer - create
+* choose a name 
+* send token : always - on production system consider if to choose 4XX response according to your authentication style
+* Token source : Generate toekn
+* Issuer : http://bigip.kerb-jwt.apm
+* JWT key Type : JWS
+* JWT primary key : choose the key configuration we created earlier
+* Audienc : app2
+* JWT Claims: move the 3 we created to selected 
+![Image]()
+### under Access go to "Profile/ policies" ---> "Access Profiles (Per-Session Policies)" - press on your policy object name
+* under SSO/Auth Domains select our SSO configuration
+
+### Now go back to the client station and once again, try to reach the server , watch the token 
+![Image]()
+# The end
 
 
