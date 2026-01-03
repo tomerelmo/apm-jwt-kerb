@@ -7,7 +7,6 @@
 [Image](https://iili.io/fXSdjG1.png?width=300)
 
 
-### dsram pass: f5apmtrain
 
 ## components 
 * 2 X BIGIP - One is for the example and the other is for practice - if you are stuck with the configuration you may take look on the Example BIGIP.
@@ -16,32 +15,28 @@
 * Ubuntu_1 - This is the backend server which get the JWT for the example machine
 * Ubuntu_2 - This is the practice backend server running echo application that return the exact http request its gets.
 
-## Documentation links
-
-* https://my.f5.com/manage/s/article/K000148782 -- Kerberos multiple KBs.
 
 
-
-# Kerberos → BIG-IP APM → JWT Low-Level Flow
+# Kerberos → BIG-IP APM → JWT Flow
 
 ## Phase 0 — Pre-existing Objects
 
 ### Active Directory
 - Service account: `svc_bigip@KERB-JWT.APM`
-- SPN: `HTTP/app.kerb-jwt.apm` mapped to `svc_bigip`
+- SPN: `HTTP/app2.kerb-jwt.apm` mapped to `svc_bigip`
 - Secret key stored in AD
 - Keytab: exported secret for BIG-IP
 
 ---
 
 ## Phase 1 — Client Access
-1. User browses: `https://app.kerb-jwt.apm`
+1. User browses: `https://app2.kerb-jwt.apm`
 2. DNS resolves to BIG-IP VIP
 
 ---
 
 ## Phase 2 — Kerberos Ticket Request
-3. Browser builds SPN: `HTTP/app.kerb-jwt.apm@KERB-JWT.APM`
+3. Browser builds SPN: `HTTP/app2.kerb-jwt.apm@KERB-JWT.APM`
 4. Browser requests service ticket from AD KDC
 5. AD returns ticket encrypted with `svc_bigip` secret
 
@@ -98,8 +93,7 @@ Authorization: Bearer <JWT>
 
 
 ## Now lets deep dive into configure Kerberos to JWT on app2.kerb-jwt.apm
-
-### Please go to :<the vs locaton> open the vs object <TBD> and scroll down to the APM section, pay attention that there is pes session policy part, this is the part we are going to concentrate, we will build the policy and config on that box.
+### Open the practie BIGIP from the components LAB page (user:admin , pass: F5apmtain!)
 
 # step 1 : 
 ## Lets buckle up and understand what we are doing first.
@@ -180,13 +174,14 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 * Service name : HTTP
 * Upload the keytab we created using the KTPASS command ( Located on c:\temp)
 
-<image of the kerberos here >
+![Image](https://iili.io/fwJVFLl.png)
+![Image]()
 
 ### Under access menu press on "Authentication" again but now Navigate to "Kerberos" and to "Kerberos Auth configuration". fill in the following details 
 * name 
 * choose the AAA server which we created 
 * Leave the rest as is and press finish
-<image>
+![Image](https://iili.io/fwJVJmG.png)
 
 ---------------------------
 # Step 4:
@@ -194,10 +189,10 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ### Lets create PerSession Policy and test our objects to have kerberos authentication for entering the application.
 
 ### On the LAB page go to components and login with RDP to the "Client Desktop" station (User: f5_student | Passwrod: F5apmtrain! )
-![Image]()
+![Image](https://iili.io/fwJVq1S.png)
 
 ### Open the chrome browser and Navigate to "https://app2.kerb-jwt.apm"(You may press F12 to make sure that no 401 which force SPNEGO occurred yet - no policy created yet)
-![Image]()
+![Image](https://iili.io/fwJVn29.png)
 
 ### Now go back to the BIGIP and Lets configure the Per Session Policy
 
@@ -205,24 +200,24 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ![Image](https://iili.io/fjAVbDB.png)
 
 ### From the menu choose : profile / policies ---> access profile ( per session pfrofile)
-![Image]()
+![Image](https://iili.io/fwJVo7e.png)
 
 ### Press on Create 
 
 ### Fill the name and choose "Profile Type" -"all"
-![Image]()
+![Image](https://iili.io/fwJVxku.png)
 
 ### Scroll down and add the english to the "accepted language" 
-![Image]()
+![Image](https://iili.io/fwJVzmb.png)
 
 ### Create the policy - make sure the policy appear on the list
-![Image]()
+![Image](https://iili.io/fwJVuhx.png)
 
 ### Now on the Policy list , pay attention to the right side of the screen, there on your policy, you will see "Edit" button, press on it
-![Image]()
+![Image](https://iili.io/fwJV7EB.png)
 
 ### The edit button take us to the policy editor page 
-![Image]()
+![Image](https://iili.io/fwJVYrP.png)
 
 ### Between the block of "Start" and the block of "Deny" - there is line with word "Fallback" and "+" sign near to it - press on "+".
 
@@ -240,7 +235,7 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ### The explanation above is written in order for you to understand the flow which we are going to create .
 
 ### Now from the option that you see , choose "401 Response" and change the "HTTP Auth Level" to "negotiate" - We basically tell the APM to response with 401 and with header negotiate , and browser need to understand it as "i need to provide the TGT"
-![Image]()
+![Image](https://iili.io/fwJVc21.png)
 #### Go to branch rule and make sure these 2 branch rules (Press add branch rules and advance):
 #### Press add branch rule , "change" and then "advance" and make sure you see the folloiwng string 
 ```text
@@ -251,46 +246,46 @@ expr {[string tolower [mcget {session.logon.last.authtype}]] == "basic"}
 expr {[string tolower [mcget {session.logon.last.authtype}]] == "negotiate"}
 ```
  #### The rule define if this block is seccessful, the browser need to reply with either negotiate or basic authtype to be count as successful.
-![Image]()
+
 
 ### Press "save". now lets create the Kerberos block: Now press "+" on the negotiate branch
-![Image]()
+![Image](https://iili.io/fwJV1pa.png)
 
 ### Search on the box "Kerberos Auth" select it and press "add item"
-![Image]()
+![Image](https://iili.io/fwJVGTJ.png)
 
 ### config the Kerberos box:
 * Choose the AAA server that we create 
 * Enable request based auth
 * Enable extract group SID 
 * Fill the group SID variable  with the following variable : session.kerberos.last.groupsids (This is session variable that APM will keep the information of the SID groups ) - We can use them later but , we will query the names of the groups directly from the AD later
-![Image]()
+![Image](https://iili.io/fwJVVQR.png)
 
 ### Now the policy looks like the below:
-![Image]()
+![Image](https://iili.io/fwJVXBp.png)
 
 ### Please press on the branch "Success" "+" sign and add Ldap query (Remember that we created it earlier ?)
-![Image]()
+![Image](https://iili.io/fwJVj4I.png)
 
 * Choose the server which we created earlier
 * Fill in the search DN with DC=kerb-jwt,DC=apm
 * And the search filter to :"(userPrincipalName=%{session.logon.last.username})" - this is tells the APM that the userPrincipalName is located on the session variable :session.logon.last.users
 * Enable also "Fetach groups..." and Save 
-![Image]()
+![Image](https://iili.io/fwJVevn.png)
 
 ### Change the "Group Membership" brach to "Allow"
 ![Image]()
 
 ### Do the same for the fallback branch under the LDAP query
-![Image]()
+![Image](https://iili.io/fwJVkps.png)
 
 ### UP on the right screen there is message "Apply Access Policy" - press on it for the policy to be saved and ready.
 
 ### Now lets go back to "Local Traffic" module ---> Virtual server ---> Virtual server list
-![Image]()
+![Image](https://iili.io/fwJVrCl.png)
 
 ### Press on out virtual server and scroll down to Acess section , we will choose our policy and them on update.
-![Image]()
+![Image](https://iili.io/fwJVsa9.png)
 
 ### Preconfigured this lab i have added the site to the chrome and edge authenticaton :
 ```text
@@ -308,17 +303,18 @@ reg add "HKLM\Software\Policies\Google\Chrome" /v DisableAuthNegotiateCnameLooku
 * Under the Components section of the lab page, head to BIGIP practice and open the WEB Shell .
 * On the webshell tail the APM logs , for watching what is going on during our authentication phase.
 * Enter the command : ```bash tail -f /var/log/apm```
-![Image]()
+![Image](https://iili.io/fwJWKua.png)
 * * Login to the client windows11 - User: f5_student Pass: F5apmtrain!
 * Open the Internet Option from the windows, and make sure our FQDN listed on the Local Inranet sites (Sites and then advance) list under security section.
-![Image]()
+![Image](https://iili.io/fwJVbZx.png)
+![Image](https://iili.io/fwJW28F.png)
 * Afthe verification, open the edge browser and before entering the FQDN open the Dev tools 
 * enter the FQDN : app2.kerb-jwt.apm 
 * If the authenticaton is failed - what may be wrong ? time synchronazation ?
 * Upon success watch the apm send 401 to the browser with WWW negotiate Header
 * Browser sending ""authorization": "Negotiate....." with the ticker as base64 code, if you got this -- that the end of this step (not so long ah ?)
 * Of course you can now view the application 
-![Image]()
+![Image](https://iili.io/fwJWnGp.png)
 
 ### Pro TIP : tail the logs that we showed earlier for understand or solve an issue, upon hard issue, we may activate debug logs (for another session :))
 
@@ -341,7 +337,8 @@ reg add "HKLM\Software\Policies\Google\Chrome" /v DisableAuthNegotiateCnameLooku
 * Type RSA
 * signin Algorithim : RS256
 * certificate file, key and chain : choose default -- While the server you send will validate the jwt, he needs to have the certificate (not the p.key) on the server 
-![Image]()
+![Image](https://iili.io/fwJWzFI.png)
+![Image](https://iili.io/fwJWo6N.png)
 
 ### under Access go to "Federation" ---> "Json Web Token" ---> "Token configuration" - create
 * name : choose name
@@ -349,7 +346,7 @@ reg add "HKLM\Software\Policies\Google\Chrome" /v DisableAuthNegotiateCnameLooku
 * Audience : add "app2"
 * Allowed singin algorithm: RS256
 * Allowed keys : the key we created above
-![Image]()
+![Image](https://iili.io/fwJWRus.png)
 
 ### under Access go to "Federation" ---> "Oauth Authorization server" ---> "claims" - create
 * Name: object name choose one 
@@ -361,7 +358,7 @@ reg add "HKLM\Software\Policies\Google\Chrome" /v DisableAuthNegotiateCnameLooku
 upn | %{session.ldap.last.attr.userPrincipalName}
 user_id | %{session.logon.last.username}
 ```
-![Image]()
+![Image](https://iili.io/fwJWA9n.png)
 
 ### under Access go to "single sign on" ---> OAuth Bearer - create
 * choose a name 
@@ -372,12 +369,13 @@ user_id | %{session.logon.last.username}
 * JWT primary key : choose the key configuration we created earlier
 * Audienc : app2
 * JWT Claims: move the 3 we created to selected 
-![Image]()
+![Image](https://iili.io/fwJW7tf.png)
+
 ### under Access go to "Profile/ policies" ---> "Access Profiles (Per-Session Policies)" - press on your policy object name
 * under SSO/Auth Domains select our SSO configuration
 
 ### Now go back to the client station and once again, try to reach the server , watch the token 
-![Image]()
+![Image](https://iili.io/fwJWan4.png)
 # The end
 
 
