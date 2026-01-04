@@ -130,7 +130,7 @@ Authorization: Bearer <JWT>
 
 ### Open the Powershell using admin account (Run as administrator)
 
-### Create spn for the second app using the service account :
+### Create SPN for the second app using the service account :
 ```text
 setspn -S HTTP/app2.kerb-jwt.apm svc_bigip
 ```
@@ -148,12 +148,12 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 
 # Step 3:
 
-### Here we going to create the Authentication-LDAP and Authentication Kerberos object which we will use later to build the Per Session Policy
+### Here we are creating the Authentication-LDAP and Authentication Kerberos object which we will use later to build the "Per Session Policy"(PSP)
 
 ### Open chrome on the DC server , navigate to the BIGIP 10.1.1.4 (User: admin | Passwrod: F5apmtrain! )
 ![Image](https://iili.io/fjAVpoP.png)
 
-### After creating the SPN and generating the keytab file, we configure BIG-IP APM to authenticate with Active Directory and decrypt the Kerberos SPNEGO token in order to retrieve the authenticated user identity.
+### After creating the SPN and generating the keytab file, we configure BIG-IP APM to authenticate with Active Directory and decrypt the Kerberos token in order to retrieve the authenticated user identity.
 
 ### Now we will create the LDAP object which later we going to use for query the authenticated user attributes 
 
@@ -163,7 +163,7 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ### Open the "Authentication" ---> "LDAP"
 ![Image](https://iili.io/fjAVtAQ.png)
 
-### Press create and fill the object deatails, remember we are using the "admin" user and the password is "F5apmtrain" and of courese the ldap id and the name of the object we will use port 389 for this lab:
+### Press create and fill the object deatails, remember we are using the "admin" user and the password is "F5apmtrain!" and of courese the ldap id and the name of the object we will use port 389 for this lab:
 ![Image](https://iili.io/fjA8UG4.png)
 
 ### Press finished to create the object.
@@ -186,7 +186,7 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ---------------------------
 # Step 4:
 
-### Lets create PerSession Policy and test our objects to have kerberos authentication for entering the application.
+### Lets create "Per Session Policy" (PSP) and test our objects .
 
 ### On the LAB page go to components and login with RDP to the "Client Desktop" station (User: f5_student | Passwrod: F5apmtrain! )
 ![Image](https://iili.io/fwJVq1S.png)
@@ -194,12 +194,12 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ### Open the chrome browser and Navigate to "https://app2.kerb-jwt.apm"(You may press F12 to make sure that no 401 which force SPNEGO occurred yet - no policy created yet)
 ![Image](https://iili.io/fwJVn29.png)
 
-### Now go back to the BIGIP and Lets configure the Per Session Policy
+### Now go back to the BIGIP and Lets configure the "Per Session Policy"(PSP)
 
 ### Navigate to "Access" --->
 ![Image](https://iili.io/fjAVbDB.png)
 
-### From the menu choose : profile / policies ---> access profile ( per session pfrofile)
+### From the menu choose : profile / policies ---> access profile (Per Session Profile - PSP)
 ![Image](https://iili.io/fwJVo7e.png)
 
 ### Press on Create 
@@ -207,13 +207,13 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 ### Fill the name and choose "Profile Type" -"all"
 ![Image](https://iili.io/fwJVxku.png)
 
-### Scroll down and add the english to the "accepted language" 
+### Scroll down and add the english to the "Accepted Language" 
 ![Image](https://iili.io/fwJVzmb.png)
 
 ### Create the policy - make sure the policy appear on the list
 ![Image](https://iili.io/fwJVuhx.png)
 
-### Now on the Policy list , pay attention to the right side of the screen, there on your policy, you will see "Edit" button, press on it
+### Now on the Policy list , pay attention to the right side of the screen, on the same line of the policy we created, you will see "Edit" button, press on it
 ![Image](https://iili.io/fwJV7EB.png)
 
 ### The edit button take us to the policy editor page 
@@ -225,9 +225,8 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 
 #### Lets talk aside on the behavior when Domain user authenticate with kerberos on a site 
 * Browser send to the BIGIP(APM) Virtual server "GET" request 
-* For the browser to trigger ticket from the AD, the browser need to see response code 401
-* When browser see that 401, and the Header "WWW-Authenticate: Negotiate" Ask form the OS the cache kerberos ticket (TGT) for the user that own the proccess.
-* The browser contacts the KDC (Key Distribution Center) on the DC
+* For the Server to trigger ticket request from the browser, the browser need to see response code 401 and "WWW-Authenticate: Negotiate"
+* When browser see that 401, and the Header "WWW-Authenticate: Negotiate" its trigger the OS to provide the cache kerberos ticket (TGT) for the user that own the proccess.
 * The DC verifies the user is valid and issues a Service Ticket (ST). This ticket is encrypted with the Web Server's secret password. The browser cannot read it; it can only hold it.
 * The browser re-send the GET request with Header: Authorization: Negotiate XXX. - the value "XXX" is base 64 encode for the ticket
 * Since the BIGIP(APM) have the Keytab from the DC he can decrypt the key and see the user identity .
@@ -236,6 +235,7 @@ setspn -Q HTTP/app2.kerb-jwt.apm
 
 ### Now from the option that you see , choose "401 Response" and change the "HTTP Auth Level" to "negotiate" - We basically tell the APM to response with 401 and with header negotiate , and browser need to understand it as "i need to provide the TGT"
 ![Image](https://iili.io/fwJVc21.png)
+
 #### Go to branch rule and make sure these 2 branch rules (Press add branch rules and advance):
 #### Press add branch rule , "change" and then "advance" and make sure you see the folloiwng string 
 ```text
