@@ -108,10 +108,10 @@ Authorization: Bearer <JWT>
 ### The BIGIP welcome screen will appear - Go into "Local Traffic" then to "Virtual Server" then "Virtual Server List"
 ![Image](https://iili.io/fjz7611.png)
 
-### There you should find the our Echo server 
+### There you should find the our Echo Virtual Server (VS)
 ![Image](https://iili.io/fjz7SzQ.png)
 
-### Press and scroll down to "Access" after we will create the building blocks , the result will end here - we will create policy which we need to choose here.
+### Press on the VS name and scroll down to "Access" after we will create the building blocks , the result will end here - we will create policy which we need to choose here.
 ![Image](https://iili.io/fjz74qP.png)
 
 
