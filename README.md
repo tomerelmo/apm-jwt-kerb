@@ -111,7 +111,7 @@ Authorization: Bearer <JWT>
 ### There you should find the our Echo Virtual Server (VS)
 ![Image](https://iili.io/fjz7SzQ.png)
 
-### Press on the VS name and scroll down to "Access" after we will create the building blocks , the result will end here - we will create policy which we need to choose here.
+### Press on the VS name and scroll down to "Access Policy" section the result of the building blocks we are building will end here - we will create policy which we need to choose on that box.
 ![Image](https://iili.io/fjz74qP.png)
 
 
