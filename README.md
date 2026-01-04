@@ -10,9 +10,9 @@
 
 ## components 
 * 2 X BIGIP - One is for the example and the other is for practice - if you are stuck with the configuration you may take look on the Example BIGIP.
-* Windows 11 - this is the client and management desktop - from here we will turn to the URL : <TBD>
+* Windows 11 - this is the client and management desktop 
 * Windows 2019 - 10.1.1.7(Mgmt subnet) -act as AD and DNS server for this lab.
-* Ubuntu_1 - This is the backend server which get the JWT for the example machine
+* Ubuntu_1 - This is the backend server(Juice-Shop) which get the JWT for the example machine.
 * Ubuntu_2 - This is the practice backend server running echo application that return the exact http request its gets.
 
 
@@ -77,7 +77,7 @@ Authorization: Bearer <JWT>
 ---
 
 ## Phase 8 — Application Trust
-14. App validates JWT signature and claims
+14. App validates JWT signature and claims - Not demonstrated here yet.
 .
 .
 
